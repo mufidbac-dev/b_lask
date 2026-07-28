@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelName }};
+
+class {{ modelName }}Service
+{
+    public function __construct()
+    {
+        // service ctor
+    }
+}

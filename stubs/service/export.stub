@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+class {{ modelName }}Export
+{
+    public function headings(): array
+    {
+        return [
+            {{ exportHeadings }}
+        ];
+    }
+}

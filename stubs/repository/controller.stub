@@ -1,0 +1,9 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelName }};
+
+class {{ modelName }}Controller
+{
+}

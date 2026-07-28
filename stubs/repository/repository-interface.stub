@@ -1,0 +1,8 @@
+<?php
+
+namespace {{ repositoryInterfaceNamespace }};
+
+interface {{ modelName }}RepositoryInterface
+{
+    public function all();
+}

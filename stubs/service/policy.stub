@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelName }};
+
+class {{ modelName }}Policy
+{
+    public function viewAny($user)
+    {
+        return true;
+    }
+}
