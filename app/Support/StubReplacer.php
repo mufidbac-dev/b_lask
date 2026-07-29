@@ -16,23 +16,16 @@ class StubReplacer
 
         foreach ($replacements as $key => $value) {
             $contents = str_replace(
-                [
-                    "{{ {$key} }}",
-                    "{{{$key}}}",
-                ],
+                ["{{ {$key} }}", "{{{$key}}}"],
                 $value,
                 $contents
             );
         }
 
-        // Validate unresolved placeholders
         preg_match_all('/{{\s*([^}]+)\s*}}/', $contents, $matches);
 
         if (!empty($matches[1])) {
-            $left = array_map(
-                fn($item) => trim($item),
-                array_unique($matches[1])
-            );
+            $left = array_map(fn ($item) => trim($item), array_unique($matches[1]));
 
             throw new \RuntimeException(
                 'Unresolved placeholders in stub: ' . implode(', ', $left)
@@ -45,18 +38,13 @@ class StubReplacer
     public function write(string $contents, string $destinationPath, bool $force = false): void
     {
         $dir = dirname($destinationPath);
-        if (!is_dir($dir)) {
-            if (!mkdir($dir, 0755, true) && !is_dir($dir)) {
-                throw new \RuntimeException(
-                    "Failed to create directories: {$dir}"
-                );
-            }
+
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new \RuntimeException("Failed to create directories: {$dir}");
         }
 
         if (file_exists($destinationPath) && !$force) {
-            throw new \RuntimeException(
-                "File already exists: {$destinationPath}"
-            );
+            throw new \RuntimeException("File already exists: {$destinationPath}");
         }
 
         file_put_contents($destinationPath, $contents);
@@ -66,19 +54,18 @@ class StubReplacer
     public static function deriveNames(string $modelName): array
     {
         $modelVariable = Str::camel($modelName);
-        $modelVariablePlural = Str::plural($modelVariable);
         $modelKebabPlural = Str::kebab(Str::plural($modelName));
 
         return [
             'modelName' => $modelName,
             'modelVariable' => $modelVariable,
-            'modelVariablePlural' => $modelVariablePlural,
+            'modelVariablePlural' => Str::plural($modelVariable),
             'modelKebabPlural' => $modelKebabPlural,
             'tableName' => Str::snake(Str::plural($modelName)),
-
             'modelNamespace' => 'App\\Models',
-            'namespace' => 'App',
             'permissionPrefix' => $modelKebabPlural,
+            'repositoryInterfaceNamespace' => "App\\Repositories\\Contracts\\{$modelName}RepositoryInterface",
+            'repositoryNamespace' => "App\\Repositories\\Eloquent{$modelName}Repository",
         ];
     }
 }
