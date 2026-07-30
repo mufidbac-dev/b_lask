@@ -1,14 +1,41 @@
 <?php
 
-namespace {{ repositoryNamespace }};
+namespace {{ namespace }};
 
 use {{ repositoryInterfaceNamespace }}\{{ modelName }}RepositoryInterface;
 use {{ modelNamespace }}\{{ modelName }};
+use Illuminate\Database\Eloquent\Collection;
 
 class Eloquent{{ modelName }}Repository implements {{ modelName }}RepositoryInterface
 {
-    public function all()
+    public function all(): Collection
     {
         return {{ modelName }}::all();
+    }
+
+    public function find(int|string $id): ?{{ modelName }}
+    {
+        return {{ modelName }}::find($id);
+    }
+
+    public function create(array $data): {{ modelName }}
+    {
+        return {{ modelName }}::create($data);
+    }
+
+    public function update(int|string $id, array $data): {{ modelName }}
+    {
+        $model = {{ modelName }}::findOrFail($id);
+        $model->fill($data);
+        $model->save();
+
+        return $model;
+    }
+
+    public function delete(int|string $id): bool
+    {
+        $model = {{ modelName }}::findOrFail($id);
+
+        return (bool) $model->delete();
     }
 }

@@ -64,8 +64,8 @@ class StubReplacer
             'tableName' => Str::snake(Str::plural($modelName)),
             'modelNamespace' => 'App\\Models',
             'permissionPrefix' => $modelKebabPlural,
-            'repositoryInterfaceNamespace' => "App\\Repositories\\Contracts\\{$modelName}RepositoryInterface",
-            'repositoryNamespace' => "App\\Repositories\\Eloquent{$modelName}Repository",
+            'repositoryInterfaceNamespace' => 'App\\Repositories\\Contracts',
+            'repositoryNamespace' => 'App\\Repositories',
         ];
     }
 }

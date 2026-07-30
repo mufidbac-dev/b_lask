@@ -2,8 +2,51 @@
 
 namespace {{ namespace }};
 
-use {{ modelNamespace }}\{{ modelName }};
+use Illuminate\Http\Request;
+use App\Http\Resources\{{ modelName }}Resource;
+use App\Http\Requests\Store{{ modelName }}Request;
+use App\Http\Requests\Update{{ modelName }}Request;
+use App\Services\{{ modelName }}Service;
+use Illuminate\Http\JsonResponse;
 
 class {{ modelName }}Controller
 {
+    public function __construct(private readonly {{ modelName }}Service $service)
+    {
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $items = $this->service->getAll();
+
+        return response()->json(['data' => {{ modelName }}Resource::collection($items)]);
+    }
+
+    public function store(Store{{ modelName }}Request $request): JsonResponse
+    {
+        $model = $this->service->create($request->validated());
+
+        return response()->json(new {{ modelName }}Resource($model), 201);
+    }
+
+    public function show(int|string $id): JsonResponse
+    {
+        $model = $this->service->getById($id);
+
+        return response()->json(new {{ modelName }}Resource($model));
+    }
+
+    public function update(Update{{ modelName }}Request $request, int|string $id): JsonResponse
+    {
+        $model = $this->service->update($id, $request->validated());
+
+        return response()->json(new {{ modelName }}Resource($model));
+    }
+
+    public function destroy(int|string $id): JsonResponse
+    {
+        $this->service->delete($id);
+
+        return response()->json(null, 204);
+    }
 }

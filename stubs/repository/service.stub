@@ -3,13 +3,37 @@
 namespace {{ namespace }};
 
 use {{ repositoryInterfaceNamespace }}\{{ modelName }}RepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 class {{ modelName }}Service
 {
-    protected $repo;
-
-    public function __construct({{ modelName }}RepositoryInterface $repo)
+    public function __construct(private readonly {{ modelName }}RepositoryInterface $repo)
     {
-        $this->repo = $repo;
+    }
+
+    public function getAll(): Collection
+    {
+        return $this->repo->all();
+    }
+
+    public function getById(int|string $id): ?Model
+    {
+        return $this->repo->find($id);
+    }
+
+    public function create(array $data): Model
+    {
+        return $this->repo->create($data);
+    }
+
+    public function update(int|string $id, array $data): Model
+    {
+        return $this->repo->update($id, $data);
+    }
+
+    public function delete(int|string $id): bool
+    {
+        return $this->repo->delete($id);
     }
 }

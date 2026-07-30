@@ -11,7 +11,6 @@ class {{ modelName }}ControllerTest extends TestCase
 
     public function test_index_returns_success()
     {
-        // Placeholder: add factories and assertions specific to the generated model
         $response = $this->getJson('/api/{{ modelKebabPlural }}');
 
         $response->assertStatus(200);

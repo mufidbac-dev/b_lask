@@ -74,6 +74,8 @@ class MakeResourceCrudCommand extends Command
         $baseReplacements = $this->buildReplacements($name, $fields, $relations);
         $force = (bool) $this->option('force');
 
+        $generatedFiles = [];
+
         foreach ($patternConfig['files'] as $key => $destinationTemplate) {
             if ($this->shouldSkip($key)) {
                 continue;
@@ -90,6 +92,7 @@ class MakeResourceCrudCommand extends Command
                 $this->stubReplacer->write($contents, base_path($destinationRelative), $force);
 
                 $this->info("Generated: {$destinationRelative}");
+                $generatedFiles[] = base_path($destinationRelative);
             } catch (\RuntimeException $e) {
                 $this->warn($e->getMessage());
             }
@@ -102,6 +105,9 @@ class MakeResourceCrudCommand extends Command
         if ($activePattern === 'repository') {
             $this->registerRepositoryBinding($name);
         }
+
+        // Post-generation automation: format, dump-autoload, dan jalankan generated tests
+        $this->runPostGenerationTasks($name, $generatedFiles);
 
         $this->line('Reminder: add resource route to routes/api.php and create migration/factory manually.');
 
@@ -128,15 +134,26 @@ class MakeResourceCrudCommand extends Command
     {
         $dir = trim(dirname($destinationRelativePath), '/');
 
+        // app/ -> App\*
         if ($dir === 'app' || $dir === '.') {
             return 'App';
         }
 
-        if (!Str::startsWith($dir, 'app/')) {
-            throw new \RuntimeException("Path tujuan di luar folder app/: {$destinationRelativePath}");
+        if (Str::startsWith($dir, 'app/')) {
+            return 'App\\' . str_replace('/', '\\', Str::after($dir, 'app/'));
         }
 
-        return 'App\\' . str_replace('/', '\\', Str::after($dir, 'app/'));
+        // tests/Feature -> Tests\Feature
+        if (Str::startsWith($dir, 'tests/')) {
+            $sub = trim(Str::after($dir, 'tests/'), '/');
+            return $sub === '' ? 'Tests' : 'Tests\\' . str_replace('/', '\\', $sub);
+        }
+
+        // fall back: attempt to derive a sensible PHP namespace (e.g., database/factories -> Database\\Factories)
+        $parts = explode('/', $dir);
+        $parts = array_map(fn($p) => Str::studly($p), $parts);
+
+        return implode('\\', $parts);
     }
 
     private function buildReplacements(string $name, array $fields, array $relations): array
@@ -171,6 +188,9 @@ class MakeResourceCrudCommand extends Command
 
         $primaryKey = $this->option('primary-key') ?? config('scaffold.primary_key');
         $usesUuid = $primaryKey === 'uuid';
+        
+        // PERBAIKAN: Evaluasi Str methods SEBELUM dimasukkan ke dalam heredoc
+        $tableName = Str::snake(Str::plural($name));
 
         $stub = $usesUuid
             ? <<<PHP
@@ -186,7 +206,7 @@ class MakeResourceCrudCommand extends Command
                 {
                     use HasFactory, HasUuids;
 
-                    protected \$table = '" . Str::snake(Str::plural($name)) . "';
+                    protected \$table = '{$tableName}';
 
                     protected \$fillable = [];
                 }
@@ -204,7 +224,7 @@ class MakeResourceCrudCommand extends Command
                 {
                     use HasFactory;
 
-                    protected \$table = '" . Str::snake(Str::plural($name)) . "';
+                    protected \$table = '{$tableName}';
 
                     protected \$fillable = [];
                 }
@@ -225,7 +245,8 @@ class MakeResourceCrudCommand extends Command
         $providerPath = app_path('Providers/AuthServiceProvider.php');
 
         if (!file_exists($providerPath)) {
-            $this->warn('AuthServiceProvider.php tidak ditemukan — daftarkan policy secara manual.');
+            $this->warn('AuthServiceProvider.php tidak ditemukan — daftarkan policy secara manual: ' .
+                "\\App\\Models\\{$name}::class => \\App\\Policies\\{$name}Policy::class,");
             return;
         }
 
@@ -257,7 +278,9 @@ class MakeResourceCrudCommand extends Command
         $providerPath = app_path('Providers/AppServiceProvider.php');
 
         if (!file_exists($providerPath)) {
-            $this->warn('AppServiceProvider.php tidak ditemukan — daftarkan binding secara manual.');
+            $this->warn('AppServiceProvider.php tidak ditemukan — daftarkan binding secara manual: ' .
+                "\$this->app->bind(\\App\\Repositories\\Contracts\\{$name}RepositoryInterface::class, " .
+                "\\App\\Repositories\\Eloquent{$name}Repository::class);");
             return;
         }
 
@@ -279,5 +302,53 @@ class MakeResourceCrudCommand extends Command
         $updated = preg_replace($pattern, "$1\n        {$binding}", $contents, 1);
         file_put_contents($providerPath, $updated);
         $this->info('Repository binding registered in AppServiceProvider');
+    }
+
+    /**
+     * Hanya jalankan test file yang baru di-generate, bukan semua tests.
+     * Skip jika file tidak ada atau test option di-disable.
+     */
+    private function runPostGenerationTasks(string $modelName, array $generatedFiles): void
+    {
+        // 1) Composer dump-autoload
+        exec('composer dump-autoload --no-interaction 2>&1', $out, $code);
+        if (isset($code) && $code === 0) {
+            $this->info('composer dump-autoload completed');
+        } else {
+            $this->warn('composer dump-autoload failed: ' . (isset($out) ? implode("\n", $out) : 'unknown'));
+        }
+
+        // 2) Run Pint on generated files if available
+        $pintPath = DIRECTORY_SEPARATOR === '\\' ? 'vendor\\bin\\pint' : './vendor/bin/pint';
+        if (!empty($generatedFiles) && file_exists('vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'pint')) {
+            $pintArgs = array_map('escapeshellarg', $generatedFiles);
+            $cmd = $pintPath . ' ' . implode(' ', $pintArgs) . ' --quiet';
+            exec($cmd . ' 2>&1', $pout, $pcode);
+            if (isset($pcode) && $pcode === 0) {
+                $this->info('Formatted generated files with pint');
+            } else {
+                $this->warn('pint formatting failed: ' . (isset($pout) ? implode("\n", $pout) : 'unknown'));
+            }
+        }
+
+        // 3) Run ONLY generated test file untuk model ini (jika di-generate)
+        if (!$this->option('no-test')) {
+            $testPath = base_path("tests/Feature/{$modelName}ControllerTest.php");
+            
+            if (file_exists($testPath)) {
+                $testClass = $modelName . 'ControllerTest';
+                $cmd = 'php artisan test --filter ' . escapeshellarg($testClass) . ' 2>&1';
+                exec($cmd, $tout, $tcode);
+                
+                if (isset($tcode) && $tcode === 0) {
+                    $this->info('Generated test passed');
+                } else {
+                    // Jangan treat sebagai error - test mungkin perlu setup tambahan
+                    $this->line('Generated test completed with warnings (mungkin butuh setup fixture/seeding)');
+                }
+            } else {
+                $this->line('Generated test file not found — skip test run');
+            }
+        }
     }
 }

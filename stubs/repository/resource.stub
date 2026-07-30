@@ -10,7 +10,7 @@ class {{ modelName }}Resource extends JsonResource
     {
         return [
             'id' => $this->id,
-            {{ resourceFields }}
+{{ resourceFields }}
         ];
     }
 }
