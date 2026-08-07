@@ -12,6 +12,7 @@
         "laravel/telescope": "^5.22",
         "laravel/tinker": "^3.0",
         "nwidart/laravel-modules": "^13.0",
+        "rakutentech/laravel-request-docs": "^2.44",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
