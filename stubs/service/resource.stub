@@ -1,16 +1,20 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{ namespace }}\Http\Resources;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class {{ modelName }}Resource extends JsonResource
+class {{ model }}Resource extends JsonResource
 {
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            {{ resourceFields }}
+            '{{ primaryKey }}' => $this->{{ primaryKey }},
+            {{ resourceFields }},
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+            'deleted_at' => $this->whenNotNull($this->deleted_at?->toISOString()),
         ];
     }
 }

@@ -1,20 +1,32 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{ namespace }}\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Store{{ modelName }}Request extends FormRequest
+class Store{{ model }}Request extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('create-{{ permissionPrefix }}');
     }
 
     public function rules(): array
     {
+        return {{ validationRules }};
+    }
+
+    public function attributes(): array
+    {
         return [
-            {{ validationRules }}
+            // 'field_name' => 'Human Readable Name',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            // 'field_name.required' => 'Custom message.',
         ];
     }
 }

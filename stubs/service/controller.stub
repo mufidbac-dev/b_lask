@@ -1,53 +1,83 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{ namespace }}\Http\Controllers;
 
-use {{ modelNamespace }}\{{ modelName }};
-use Illuminate\Http\Request;
-use App\Http\Resources\{{ modelName }}Resource;
-use App\Http\Requests\Store{{ modelName }}Request;
-use App\Http\Requests\Update{{ modelName }}Request;
-use App\Services\{{ modelName }}Service;
+use {{ modelNamespace }};
+use {{ moduleNamespace }}\Http\Requests\Store{{ model }}Request;
+use {{ moduleNamespace }}\Http\Requests\Update{{ model }}Request;
+use {{ moduleNamespace }}\Http\Resources\{{ model }}Resource;
+use {{ moduleNamespace }}\Services\{{ model }}Service;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Routing\Controller;
 
-class {{ modelName }}Controller
+class {{ model }}Controller extends Controller
 {
-    public function __construct(private readonly {{ modelName }}Service $service)
-    {
+    public function __construct(
+        private readonly {{ model }}Service $service,
+    ) {
+        $this->authorizeResource({{ model }}::class, '{{ modelVariable }}');
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $items = $this->service->getAll();
+        $items = $this->service->paginate($request);
 
-        return response()->json([ 'data' => {{ modelName }}Resource::collection($items) ]);
+        return {{ model }}Resource::collection($items);
     }
 
-    public function store(Store{{ modelName }}Request $request): JsonResponse
+    public function store(Store{{ model }}Request $request): JsonResponse
     {
-        $model = $this->service->create($request->validated());
+        $item = $this->service->create($request->validated());
 
-        return response()->json(new {{ modelName }}Resource($model), 201);
+        return (new {{ model }}Resource($item))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show(int|string $id): JsonResponse
+    public function show({{ model }} ${{ modelVariable }}): {{ model }}Resource
     {
-        $model = $this->service->getById($id);
+        $this->service->loadRelations(${{ modelVariable }});
 
-        return response()->json(new {{ modelName }}Resource($model));
+        return new {{ model }}Resource(${{ modelVariable }});
     }
 
-    public function update(Update{{ modelName }}Request $request, int|string $id): JsonResponse
+    public function update(Update{{ model }}Request $request, {{ model }} ${{ modelVariable }}): {{ model }}Resource
     {
-        $model = $this->service->update($id, $request->validated());
+        $item = $this->service->update(${{ modelVariable }}, $request->validated());
 
-        return response()->json(new {{ modelName }}Resource($model));
+        return new {{ model }}Resource($item);
     }
 
-    public function destroy(int|string $id): JsonResponse
+    public function destroy({{ model }} ${{ modelVariable }}): JsonResponse
     {
-        $this->service->delete($id);
+        $this->service->delete(${{ modelVariable }});
 
-        return response()->json(null, 204);
+        return response()->json(['message' => '{{ model }} deleted successfully.']);
+    }
+
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $this->authorize('delete', {{ model }}::class);
+
+        $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $deleted = $this->service->bulkDelete($request->ids);
+
+        return response()->json([
+            'message' => "{$deleted} {{ model }}(s) deleted successfully.",
+            'deleted' => $deleted,
+        ]);
+    }
+
+    public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $this->authorize('export', {{ model }}::class);
+
+        return $this->service->export($request);
     }
 }
