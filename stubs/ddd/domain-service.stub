@@ -1,0 +1,11 @@
+<?php
+
+namespace {{ namespace }}\Domain\{{ modelName }};
+
+class {{ modelName }}Service
+{
+    public function perform(array $data)
+    {
+        // Domain-level logic for {{ modelName }}
+    }
+}

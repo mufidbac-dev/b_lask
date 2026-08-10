@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }}\Domain\Entities;
+
+use {{ modelNamespace }} as Eloquent{{ model }};
+
+
+final class {{ model }}
+{
+    public function __construct(
+        public readonly ?string ${{ primaryKey }} = null,
+    ) {
+    }
+
+    public static function fromModel(Eloquent{{ model }} ${{ modelVariable }}): self
+    {
+        return new self(
+            {{ primaryKey }}: ${{ modelVariable }}->{{ primaryKey }},
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            '{{ primaryKey }}' => $this->{{ primaryKey }},
+        ];
+    }
+}

@@ -1,0 +1,8 @@
+<?php
+
+namespace {{ namespace }}\Domain\{{ modelName }};
+
+class {{ modelName }}Entity
+{
+    // Domain entity for {{ modelName }}
+}

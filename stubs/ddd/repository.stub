@@ -1,0 +1,41 @@
+<?php
+
+namespace {{ namespace }}\Repositories;
+
+use {{ modelNamespace }};
+use Illuminate\Database\Eloquent\Collection;
+
+class {{ model }}Repository
+{
+    public function all(): Collection
+    {
+        return {{ model }}::all();
+    }
+
+    public function find(string ${{ primaryKey }}): ?{{ model }}
+    {
+        return {{ model }}::find(${{ primaryKey }});
+    }
+
+    public function findOrFail(string ${{ primaryKey }}): {{ model }}
+    {
+        return {{ model }}::findOrFail(${{ primaryKey }});
+    }
+
+    public function create(array $data): {{ model }}
+    {
+        return {{ model }}::create($data);
+    }
+
+    public function update({{ model }} ${{ modelVariable }}, array $data): {{ model }}
+    {
+        ${{ modelVariable }}->update($data);
+
+        return ${{ modelVariable }}->fresh();
+    }
+
+    public function delete({{ model }} ${{ modelVariable }}): bool
+    {
+        return (bool) ${{ modelVariable }}->delete();
+    }
+}
