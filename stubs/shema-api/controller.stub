@@ -1,6 +1,6 @@
 <?php
 
-namespace {{ namespace }}\Http\Controllers;
+namespace {{ namespace }};
 
 use {{ modelNamespace }};
 use {{ moduleNamespace }}\Http\Requests\Store{{ model }}Request;

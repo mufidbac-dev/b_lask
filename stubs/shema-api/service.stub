@@ -1,6 +1,6 @@
 <?php
 
-namespace {{ namespace }}\Services;
+namespace {{ namespace }};
 
 use {{ modelNamespace }};
 use {{ moduleNamespace }}\Exports\{{ model }}Export;

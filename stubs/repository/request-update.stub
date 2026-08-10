@@ -1,20 +1,32 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{ namespace }}\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Update{{ modelName }}Request extends FormRequest
+class Update{{ model }}Request extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('update-{{ permissionPrefix }}');
     }
 
     public function rules(): array
     {
+        return {{ validationRulesUpdate }};
+    }
+
+    public function attributes(): array
+    {
         return [
-            {{ validationRulesUpdate }}
+            // 'field_name' => 'Human Readable Name',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            // 'field_name.required' => 'Custom message.',
         ];
     }
 }

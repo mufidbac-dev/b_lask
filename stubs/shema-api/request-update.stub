@@ -1,19 +1,19 @@
 <?php
 
-namespace {{ namespace }}\Http\Requests;
+namespace {{ namespace }};
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Store{{ model }}Request extends FormRequest
+class Update{{ model }}Request extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create-{{ permissionPrefix }}');
+        return $this->user()->can('update-{{ permissionPrefix }}');
     }
 
     public function rules(): array
     {
-        return {{ validationRules }};
+        return {{ validationRulesUpdate }};
     }
 
     public function attributes(): array
