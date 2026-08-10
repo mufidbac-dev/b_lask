@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }}\Actions;
+
+use {{ modelNamespace }};
+
+class {{ modelName }}Action
+{
+    public function handle(array $data): {{ modelName }}
+    {
+        // Implement action
+    }
+}
