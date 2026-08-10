@@ -1,0 +1,8 @@
+<?php
+
+namespace {{ namespace }}\Commands;
+
+class {{ modelName }}Command
+{
+    public function __construct(public array $payload) {}
+}

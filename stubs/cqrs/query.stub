@@ -1,0 +1,8 @@
+<?php
+
+namespace {{ namespace }}\Queries;
+
+class {{ modelName }}Query
+{
+    public function __construct(public array $criteria = []) {}
+}

@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }}\Handlers;
+
+use {{ modelNamespace }};
+
+class {{ modelName }}Handler
+{
+    public function handle({{ modelName }}Command $command)
+    {
+        // Implement handler logic
+    }
+}
