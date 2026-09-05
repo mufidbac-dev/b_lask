@@ -3,6 +3,8 @@
 namespace Modules\Auth\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AuthDatabaseSeeder extends Seeder
 {
@@ -11,6 +13,17 @@ class AuthDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $permissions = [
+            'profile:read',
+            'profile:write',
+            'tokens:manage',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::findOrCreate($permission, 'web');
+        }
+
+        $owner = Role::findOrCreate('owner', 'web');
+        $owner->syncPermissions($permissions);
     }
 }
