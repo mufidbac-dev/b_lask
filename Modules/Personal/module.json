@@ -1,0 +1,11 @@
+{
+    "name": "Personal",
+    "alias": "personal",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Personal\\Providers\\PersonalServiceProvider"
+    ],
+    "files": []
+}
