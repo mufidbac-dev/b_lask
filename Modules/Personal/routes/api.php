@@ -9,5 +9,5 @@ use Modules\Personal\Http\Controllers\TagController;
 use Modules\Personal\Http\Controllers\TaskController;
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function (): void {
-    
+    Route::apiResource('projects', ProjectController::class);
 });
