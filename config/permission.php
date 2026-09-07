@@ -148,7 +148,9 @@ return [
      * (view the latest version of this package's migration file)
      */
 
-    'teams' => true,
+    // Tenant/team scoping is not enabled until a teams table and tenancy
+    // boundary are introduced.
+    'teams' => false,
 
     /*
      * The class to use to resolve the permissions team id
