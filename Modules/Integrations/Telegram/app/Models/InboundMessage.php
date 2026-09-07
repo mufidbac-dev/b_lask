@@ -3,6 +3,7 @@
 namespace Modules\Integrations\Telegram\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InboundMessage extends Model
 {
@@ -15,5 +16,10 @@ class InboundMessage extends Model
     protected function casts(): array
     {
         return ['received_at' => 'datetime', 'processed_at' => 'datetime'];
+    }
+
+    public function channelAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChannelAccount::class);
     }
 }

@@ -30,6 +30,14 @@ class TelegramApiClient
         ])->throw()->json();
     }
 
+    public function sendMessageWithButtons(string $chatId, string $text, array $buttons): array
+    {
+        return (array) $this->client()->post('/sendMessage', [
+            'chat_id' => $chatId, 'text' => $text,
+            'reply_markup' => ['inline_keyboard' => [$buttons]],
+        ])->throw()->json();
+    }
+
     public function setWebhook(string $url, string $secret): array
     {
         return (array) $this->client()->post('/setWebhook', [
@@ -47,7 +55,15 @@ class TelegramApiClient
                 ['command' => 'task', 'description' => 'Create a task'],
                 ['command' => 'list', 'description' => 'List open tasks'],
                 ['command' => 'done', 'description' => 'Complete a task'],
+                ['command' => 'rekap', 'description' => 'Transaction summary'],
             ],
         ])->throw()->json();
+    }
+
+    public function downloadFile(string $fileId): string
+    {
+        $file = (array) $this->client()->post('/getFile', ['file_id' => $fileId])->throw()->json('result');
+        $token = (string) config('services.telegram.bot_token');
+        return Http::timeout(20)->get("https://api.telegram.org/file/bot{$token}/".($file['file_path'] ?? ''))->throw()->body();
     }
 }

@@ -3,6 +3,7 @@
 namespace Modules\Integrations\Telegram\Services;
 
 use Modules\Personal\Models\Task;
+use App\Models\Transaction;
 
 class TelegramCommandService
 {
@@ -15,6 +16,7 @@ class TelegramCommandService
             '/task' => $this->createTask($userId, $argument),
             '/list' => $this->listTasks($userId),
             '/done' => $this->completeTask($userId, $argument),
+            '/rekap' => $this->summary($userId, $argument),
             default => 'Unknown command. Use /help.',
         };
     }
@@ -57,5 +59,17 @@ class TelegramCommandService
         ]);
 
         return $updated === 1 ? "Task #{$id} completed." : 'Task not found.';
+    }
+
+    private function summary(int $userId, string $argument): string
+    {
+        $dates = preg_split('/\s+/', trim($argument));
+        $from = $dates[0] ?? now()->startOfMonth()->toDateString();
+        $to = $dates[1] ?? now()->toDateString();
+        $rows = Transaction::where('user_id', $userId)->whereBetween('transaction_date', [$from, $to])
+            ->with('category:id,name')->get()->groupBy(fn ($t) => $t->type);
+        $income = (float) $rows->get('income', collect())->sum('amount');
+        $expense = (float) $rows->get('expense', collect())->sum('amount');
+        return "Rekap {$from} s/d {$to}\nPemasukan: Rp ".number_format($income, 0, ',', '.')."\nPengeluaran: Rp ".number_format($expense, 0, ',', '.');
     }
 }

@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Jobs\ProcessReceiptScan;
+use App\Models\ReceiptScan;
+use Illuminate\Support\Facades\Storage;
 use Modules\Integrations\Telegram\Jobs\SendTelegramMessage;
 use Modules\Integrations\Telegram\Models\ChannelAccount;
 use Modules\Integrations\Telegram\Models\ChannelLinkToken;
@@ -73,6 +76,35 @@ class TelegramWebhookController
             );
             $inbound->update(['status' => 'rejected', 'processed_at' => now()]);
 
+            return response()->json(['accepted' => true]);
+        }
+
+        if (isset($message['photo']) && is_array($message['photo'])) {
+            $photo = end($message['photo']);
+            $bytes = $this->telegram->downloadFile((string) ($photo['file_id'] ?? ''));
+            $hash = hash('sha256', $bytes);
+            $path = 'receipts/'.$account->user_id.'/'.$hash.'.enc';
+            Storage::disk(config('ocr.private_disk'))->put($path, Crypt::encryptString(base64_encode($bytes)));
+            $scan = ReceiptScan::firstOrCreate(
+                ['idempotency_key' => hash('sha256', $account->user_id.':'.$hash)],
+                [
+                    'user_id' => $account->user_id, 'inbound_message_id' => $inbound->id,
+                    'source' => 'telegram', 'original_sha256' => $hash,
+                    'original_path_encrypted' => Crypt::encryptString($path),
+                ],
+            );
+            ProcessReceiptScan::dispatch($scan->id);
+            $outbound = OutboundMessage::firstOrCreate(
+                ['idempotency_key' => "telegram:receipt:{$scan->id}"],
+                [
+                    'channel_account_id' => $account->id, 'inbound_message_id' => $inbound->id,
+                    'provider' => 'telegram', 'message_type' => 'receipt_confirmation',
+                    'content_encrypted' => Crypt::encryptString("Struk diterima dan sedang diproses.\nStatus: pending review\nBalas: Simpan / Edit / Batal"),
+                    'status' => 'pending', 'queued_at' => now(),
+                ],
+            );
+            SendTelegramMessage::dispatch($outbound->id);
+            $inbound->update(['channel_account_id' => $account->id, 'status' => 'processed', 'processed_at' => now()]);
             return response()->json(['accepted' => true]);
         }
 
