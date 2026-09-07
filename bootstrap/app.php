@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Modules\Integrations\Telegram\Providers\TelegramServiceProvider;
 use Rakutentech\LaravelRequestDocs\LaravelRequestDocsMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         __DIR__.'/../app/Console/Commands',
+    ])
+    ->withProviders([
+        TelegramServiceProvider::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

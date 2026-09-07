@@ -1,0 +1,11 @@
+{
+    "name": "Telegram",
+    "alias": "telegram",
+    "description": "Telegram integration vertical slice",
+    "keywords": ["telegram", "integration"],
+    "priority": 0,
+    "providers": [
+        "Modules\\Integrations\\Telegram\\Providers\\TelegramServiceProvider"
+    ],
+    "files": []
+}

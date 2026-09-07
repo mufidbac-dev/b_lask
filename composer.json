@@ -28,6 +28,7 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "Modules\\Integrations\\Telegram\\": "Modules/Integrations/Telegram/app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

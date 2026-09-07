@@ -1,0 +1,9 @@
+{
+    "name": "modules/telegram",
+    "description": "Telegram integration module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Integrations\\Telegram\\": "app/"
+        }
+    }
+}
