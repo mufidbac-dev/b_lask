@@ -11,6 +11,8 @@ use ReflectionMethod;
 
 class GenerateRestApiCommand extends Command
 {
+    //  php artisan make:rest-api test PointOfSales --bootstrap
+    //  php artisan make:rest-api test PointOfSales --all
     protected $signature = 'make:rest-api
         {model        : The model class name}
         {module?      : The module name (auto-detected if omitted)}
